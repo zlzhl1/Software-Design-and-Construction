@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MemAppender.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">assign251_2</a> &gt; <a href="index.source.html" class="el_package">default</a> &gt; <span class="el_source">MemAppender.java</span></div><h1>MemAppender.java</h1><pre class="source lang-java linenums">import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.helpers.LogLog;
+import org.apache.log4j.spi.LoggingEvent;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+public class MemAppender extends AppenderSkeleton {
+
+<span class="fc" id="L12">    protected final int DEFAULT_SIZE = 999;</span>
+    protected List&lt;LoggingEvent&gt; logEvents;
+<span class="fc" id="L14">    protected long discardedCount = 0;</span>
+
+    protected int maxSize;
+
+<span class="fc" id="L18">    private MemAppender (){</span>
+<span class="fc" id="L19">        maxSize = DEFAULT_SIZE;</span>
+<span class="fc" id="L20">        logEvents = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L21">    }</span>
+
+    @Override
+    public void close() {
+<span class="fc" id="L25">        printLogs();</span>
+<span class="fc" id="L26">        logEvents.clear();</span>
+<span class="fc" id="L27">    }</span>
+
+    @Override
+    public boolean requiresLayout() {
+<span class="nc" id="L31">        return false;</span>
+    }
+
+    private static class SingletonHolder {
+<span class="fc" id="L35">        private static MemAppender INSTANCE = new MemAppender();</span>
+    }
+
+    @Override
+    protected void append(LoggingEvent loggingEvent) {
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (logEvents.size() + 1 &gt; maxSize){</span>
+<span class="fc" id="L41">            discardedCount++;</span>
+<span class="fc" id="L42">            logEvents.remove(0);</span>
+        }
+<span class="fc" id="L44">        logEvents.add(loggingEvent);</span>
+<span class="fc" id="L45">    }</span>
+
+    public static MemAppender getInstance() {
+<span class="fc" id="L48">            return SingletonHolder.INSTANCE;</span>
+        }
+    private void reset() {
+<span class="nc" id="L51">        SingletonHolder.INSTANCE = null;</span>
+<span class="nc" id="L52">    }</span>
+
+    public List&lt;LoggingEvent&gt; getCurrentLogs() {
+<span class="nc" id="L55">        return Collections.unmodifiableList(logEvents);</span>
+    }
+    public List&lt;String&gt; getEventStrings(){
+<span class="nc" id="L58">        List&lt;String&gt; EventStrings = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if(layout == null){</span>
+<span class="nc" id="L60">            LogLog.error(&quot;Please set the layout before calling 'getEventStrings()' method.&quot;);</span>
+<span class="nc" id="L61">            System.exit(1);</span>
+        }else {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">            for (LoggingEvent currentLog : logEvents) {</span>
+<span class="nc" id="L64">                EventStrings.add(layout.format(currentLog));</span>
+<span class="nc" id="L65">            }</span>
+        }
+<span class="nc" id="L67">        return Collections.unmodifiableList(EventStrings);</span>
+    }
+    public void  printLogs(){
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if(layout == null){</span>
+<span class="nc" id="L71">            System.out.println(&quot;Please set the layout before calling 'printLogs()' method.&quot;);</span>
+<span class="nc" id="L72">            System.exit(1);</span>
+        }
+        else{
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            for(LoggingEvent loggingEvent:logEvents){</span>
+<span class="fc" id="L76">                System.out.println(layout.format(loggingEvent));</span>
+<span class="fc" id="L77">            }</span>
+        }
+<span class="fc" id="L79">        logEvents.clear();</span>
+<span class="fc" id="L80">    }</span>
+    public long getDiscardedLogCount() {
+<span class="nc" id="L82">        return discardedCount;</span>
+    }
+    public void setMaxSize(int maxSize) {
+<span class="fc" id="L85">        this.maxSize = maxSize;</span>
+<span class="fc" id="L86">    }</span>
+
+    public void setLinkedList(){
+<span class="fc" id="L89">        maxSize = DEFAULT_SIZE;</span>
+<span class="fc" id="L90">        discardedCount = 0;</span>
+<span class="fc" id="L91">        logEvents = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L92">    }</span>
+    public void setArrayList(){
+<span class="fc" id="L94">        maxSize = DEFAULT_SIZE;</span>
+<span class="fc" id="L95">        discardedCount = 0;</span>
+<span class="fc" id="L96">        logEvents = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L97">    }</span>
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
